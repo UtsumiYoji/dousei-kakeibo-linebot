@@ -7,6 +7,11 @@ export function isStartCommand(text: string): boolean {
   return ["支出", "登録", "支出登録"].includes(normalized);
 }
 
+export function isUserIdCommand(text: string): boolean {
+  const normalized = normalizeText(text).toLowerCase();
+  return ["ユーザーid", "ユーザid", "userid", "user id", "lineid", "line id"].includes(normalized);
+}
+
 export function isCancelCommand(text: string): boolean {
   return ["キャンセル", "取消", "中止", "やめる"].includes(normalizeText(text));
 }

@@ -1,4 +1,4 @@
-import { findByNameOrIndex, isCancelCommand, isConfirmCommand, isReviseCommand, isStartCommand, normalizeText, parseAmountYen } from "./parser.js";
+import { findByNameOrIndex, isCancelCommand, isConfirmCommand, isReviseCommand, isStartCommand, isUserIdCommand, normalizeText, parseAmountYen } from "./parser.js";
 import type { BotReply, Category, ExpenseDraft, KakeiboClient, Member, Session } from "./types.js";
 import { SessionStore } from "./sessionStore.js";
 
@@ -11,6 +11,10 @@ export class ExpenseConversation {
 
   async handleText(userId: string, text: string, eventId?: string): Promise<BotReply[]> {
     if (this.store.markProcessed(eventId)) return [];
+
+    if (isUserIdCommand(text)) {
+      return [{ text: `あなたのLINE userId:\n${userId}\n\nこの値をLINE_ALLOWED_USER_IDSに設定してください。` }];
+    }
 
     if (!this.allowedUserIds.has(userId)) {
       return [{ text: "このLINEユーザーからの支出登録は許可されていません。" }];

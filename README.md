@@ -69,7 +69,7 @@ curl http://127.0.0.1:3001/health
    - リバースプロキシはこのサービスの `http://127.0.0.1:3001/webhook/line` へ転送します。
 5. 利用者のLINE userIdを取得し、`LINE_ALLOWED_USER_IDS` に設定します。
 
-userId確認のため、初回だけ一時的にログ出力を追加するか、LINE DevelopersのWebhookイベント確認機能などで送信元を確認してください。運用時は許可されたuserIdだけが支出登録できます。
+userId確認のため、Botを友だち追加したあとLINEで `ユーザーID` と送ってください。Botが返信した値を `LINE_ALLOWED_USER_IDS` に設定します。このコマンドは初期設定用なので、allowlist登録前でも利用できます。運用時は許可されたuserIdだけが支出登録できます。
 
 ## Scheduled summary
 

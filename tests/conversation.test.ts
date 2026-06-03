@@ -47,6 +47,15 @@ describe("ExpenseConversation", () => {
     expect((await conversation.handleText("user-2", "支出登録"))[0]?.text).toContain("許可されていません");
   });
 
+  it("returns the LINE user id before checking the allowlist", async () => {
+    const conversation = new ExpenseConversation(new SessionStore(10000), fakeClient(), new Set(["user-1"]));
+
+    const reply = (await conversation.handleText("user-2", "ユーザーID"))[0]?.text;
+
+    expect(reply).toContain("user-2");
+    expect(reply).toContain("LINE_ALLOWED_USER_IDS");
+  });
+
   it("cancels an active session", async () => {
     const conversation = new ExpenseConversation(new SessionStore(10000), fakeClient(), new Set(["user-1"]));
 

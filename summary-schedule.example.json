@@ -1,0 +1,21 @@
+{
+  "enabled": false,
+  "timezone": "Asia/Tokyo",
+  "recipients": [],
+  "schedules": [
+    {
+      "type": "daily",
+      "time": "21:00"
+    },
+    {
+      "type": "weekly",
+      "dayOfWeek": "sun",
+      "time": "21:00"
+    },
+    {
+      "type": "monthly",
+      "dayOfMonth": 1,
+      "time": "09:00"
+    }
+  ]
+}

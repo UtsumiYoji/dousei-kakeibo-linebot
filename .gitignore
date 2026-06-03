@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.env
+.vitest-cache/
+coverage/
+npm-debug.log*

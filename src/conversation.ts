@@ -1,4 +1,5 @@
-import { findByNameOrIndex, isCancelCommand, isConfirmCommand, isReviseCommand, isStartCommand, isUserIdCommand, normalizeText, parseAmountYen } from "./parser.js";
+import { findByNameOrIndex, isCancelCommand, isConfirmCommand, isRecentExpensesCommand, isReviseCommand, isStartCommand, isSummaryCommand, isUserIdCommand, normalizeText, parseAmountYen } from "./parser.js";
+import { buildRecentExpensesMessage, buildSummaryMessage } from "./summaryMessage.js";
 import type { BotReply, Category, ExpenseDraft, KakeiboClient, Member, Session } from "./types.js";
 import { SessionStore } from "./sessionStore.js";
 
@@ -25,6 +26,9 @@ export class ExpenseConversation {
       return [{ text: "支出登録をキャンセルしました。" }];
     }
 
+    if (isSummaryCommand(text)) return this.handleSummary();
+    if (isRecentExpensesCommand(text)) return this.handleRecentExpenses();
+
     const session = this.store.get(userId);
     if (!session) {
       if (isStartCommand(text)) {
@@ -45,6 +49,24 @@ export class ExpenseConversation {
         return this.handleDescription(userId, session, text);
       case "confirm":
         return this.handleConfirm(userId, session, text);
+    }
+  }
+
+  private async handleSummary(): Promise<BotReply[]> {
+    try {
+      return [{ text: await buildSummaryMessage(this.kakeibo) }];
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "取得に失敗しました。";
+      return [{ text: `サマリーを取得できませんでした。\n${message}` }];
+    }
+  }
+
+  private async handleRecentExpenses(): Promise<BotReply[]> {
+    try {
+      return [{ text: await buildRecentExpensesMessage(this.kakeibo) }];
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "取得に失敗しました。";
+      return [{ text: `直近の支出を取得できませんでした。\n${message}` }];
     }
   }
 

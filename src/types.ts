@@ -14,6 +14,14 @@ export type Category = {
 export type Expense = {
   id: string;
   amountYen: number;
+  occurredAt?: string;
+  description?: string;
+  payer?: {
+    name: string;
+  };
+  category?: {
+    name: string;
+  };
 };
 
 export type SettlementSummary = {
@@ -61,6 +69,7 @@ export interface KakeiboClient {
   listCategories(): Promise<Category[]>;
   listMembers(): Promise<Member[]>;
   listUnsettledExpenses(): Promise<Expense[]>;
+  listRecentExpenses(limit: number): Promise<Expense[]>;
   getSettlementSummary(): Promise<SettlementSummary>;
   createExpense(input: {
     description: string;

@@ -15,6 +15,11 @@ export class HttpKakeiboClient implements KakeiboClient {
     return this.request<Expense[]>("/api/expenses?settled=unsettled");
   }
 
+  async listRecentExpenses(limit: number): Promise<Expense[]> {
+    const expenses = await this.request<Expense[]>("/api/expenses?settled=all");
+    return expenses.slice(0, Math.max(0, limit));
+  }
+
   async getSettlementSummary(): Promise<SettlementSummary> {
     return this.request<SettlementSummary>("/api/settlements");
   }

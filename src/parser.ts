@@ -12,6 +12,16 @@ export function isUserIdCommand(text: string): boolean {
   return ["ユーザーid", "ユーザid", "userid", "user id", "lineid", "line id"].includes(normalized);
 }
 
+export function isSummaryCommand(text: string): boolean {
+  const normalized = normalizeText(text).toLowerCase();
+  return ["サマリー", "家計簿サマリー", "清算状況", "精算状況", "状況"].includes(normalized);
+}
+
+export function isRecentExpensesCommand(text: string): boolean {
+  const normalized = normalizeText(text).toLowerCase();
+  return ["履歴", "支出履歴", "登録履歴", "最近", "最近の支出", "直近", "直近の支出", "直近5件"].includes(normalized);
+}
+
 export function isCancelCommand(text: string): boolean {
   return ["キャンセル", "取消", "中止", "やめる"].includes(normalizeText(text));
 }

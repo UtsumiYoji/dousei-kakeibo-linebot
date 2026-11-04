@@ -1,5 +1,13 @@
 import express from "express";
-import { Client, middleware, type ClientConfig, type MiddlewareConfig, type WebhookEvent } from "@line/bot-sdk";
+import {
+  Client,
+  JSONParseError,
+  SignatureValidationFailed,
+  middleware,
+  type ClientConfig,
+  type MiddlewareConfig,
+  type WebhookEvent
+} from "@line/bot-sdk";
 import { ExpenseConversation } from "./conversation.js";
 import { HttpKakeiboClient } from "./kakeiboClient.js";
 import { toLineTextMessage } from "./lineMessages.js";
@@ -40,6 +48,18 @@ export function createApp(config: AppConfig) {
   });
 
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
+    // 署名なし・不正署名・壊れたbodyはクライアント側の誤りなので4xxで返す(サーバー障害扱いにしない)。
+    if (error instanceof SignatureValidationFailed) {
+      console.warn(`webhook rejected: ${error.message}`);
+      response.status(401).json({ error: "invalid signature" });
+      return;
+    }
+    if (error instanceof JSONParseError) {
+      console.warn(`webhook rejected: ${error.message}`);
+      response.status(400).json({ error: "invalid request body" });
+      return;
+    }
+
     console.error(error);
     response.status(500).json({ error: "internal server error" });
   });

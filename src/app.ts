@@ -8,9 +8,13 @@ import {
   type MiddlewareConfig,
   type WebhookEvent
 } from "@line/bot-sdk";
+import { ChatQueue } from "./chatQueue.js";
 import { ExpenseConversation } from "./conversation.js";
+import { DraftStore } from "./draftStore.js";
+import { ExpenseAssistant } from "./expenseAssistant.js";
 import { HttpKakeiboClient } from "./kakeiboClient.js";
-import { toLineTextMessage } from "./lineMessages.js";
+import { handleLineEvent, toChatContext } from "./lineEvents.js";
+import { SakuraLlmClient } from "./llmClient.js";
 import { SessionStore } from "./sessionStore.js";
 import { loadSummaryScheduleConfig } from "./summaryConfig.js";
 import { SummaryScheduler } from "./summaryScheduler.js";
@@ -30,6 +34,17 @@ export function createApp(config: AppConfig) {
   const kakeibo = new HttpKakeiboClient(config.kakeiboApiBaseUrl);
   const sessions = new SessionStore(config.sessionTtlMs);
   const conversation = new ExpenseConversation(sessions, kakeibo, config.allowedUserIds);
+  const assistant = new ExpenseAssistant({
+    conversation,
+    sessions,
+    drafts: new DraftStore(config.draftTtlMs ?? 24 * 60 * 60 * 1000),
+    kakeibo,
+    llm: config.ai ? new SakuraLlmClient(config.ai) : undefined,
+    allowedUserIds: config.allowedUserIds,
+    allowedGroupIds: config.allowedGroupIds ?? new Set(),
+    memberMap: config.memberMap ?? new Map()
+  });
+  const queue = new ChatQueue();
   const summaryConfig = loadSummaryScheduleConfig(config.summaryScheduleConfigPath, config.allowedUserIds);
   new SummaryScheduler(summaryConfig, kakeibo, lineClient).start();
 
@@ -37,13 +52,13 @@ export function createApp(config: AppConfig) {
     response.json({ ok: true });
   });
 
-  app.post("/webhook/line", middleware(lineConfig), async (request, response, next) => {
-    try {
-      const events = (request.body.events ?? []) as WebhookEvent[];
-      await Promise.all(events.map((event) => handleEvent(event, conversation, lineClient)));
-      response.status(200).end();
-    } catch (error) {
-      next(error);
+  app.post("/webhook/line", middleware(lineConfig), (request, response) => {
+    const events = (request.body.events ?? []) as WebhookEvent[];
+    // LLMの応答を待たずに200を返し、結果は返信用トークンで送る。
+    response.status(200).end();
+    for (const event of events) {
+      const context = toChatContext(event.source);
+      if (context) void queue.enqueue(context.chatId, () => handleLineEvent(event, assistant, lineClient));
     }
   });
 
@@ -65,17 +80,4 @@ export function createApp(config: AppConfig) {
   });
 
   return app;
-}
-
-async function handleEvent(event: WebhookEvent, conversation: ExpenseConversation, lineClient: Client): Promise<void> {
-  if (event.type !== "message" || event.message.type !== "text") return;
-
-  const userId = "userId" in event.source ? event.source.userId : undefined;
-  if (!userId) return;
-
-  const eventId = typeof event.webhookEventId === "string" ? event.webhookEventId : undefined;
-  const replies = await conversation.handleText(userId, event.message.text, eventId);
-  if (replies.length === 0) return;
-
-  await lineClient.replyMessage(event.replyToken, replies.map(toLineTextMessage));
 }

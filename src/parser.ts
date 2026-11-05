@@ -12,6 +12,11 @@ export function isUserIdCommand(text: string): boolean {
   return ["ユーザーid", "ユーザid", "userid", "user id", "lineid", "line id"].includes(normalized);
 }
 
+export function isGroupIdCommand(text: string): boolean {
+  const normalized = normalizeText(text).toLowerCase();
+  return ["グループid", "groupid", "group id"].includes(normalized);
+}
+
 export function isSummaryCommand(text: string): boolean {
   const normalized = normalizeText(text).toLowerCase();
   return ["サマリー", "家計簿サマリー", "清算状況", "精算状況", "状況"].includes(normalized);
@@ -28,6 +33,11 @@ export function isCancelCommand(text: string): boolean {
 
 export function isConfirmCommand(text: string): boolean {
   return ["登録", "はい", "OK", "ok"].includes(normalizeText(text));
+}
+
+/** 下書きの承認。グループの会話に紛れないよう「はい」などは含めない。 */
+export function isDraftConfirmCommand(text: string): boolean {
+  return normalizeText(text) === "登録";
 }
 
 export function isReviseCommand(text: string): boolean {

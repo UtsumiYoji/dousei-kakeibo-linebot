@@ -2,6 +2,28 @@
 
 LINEから `dousei-kakeibo` に支出を登録するためのWebhookサービスです。支出登録以外の清算計上、カテゴリ追加、メンバー追加などは扱いません。
 
+## AI登録
+
+`SAKURA_AI_TOKEN` を設定すると、さくらのAI Engineを使って画像とテキストから支出の下書きを作ります。下書きは承認されるまで登録しません。
+
+- レシート画像を送ると、金額、カテゴリ、店名、日付を読み取ります。支払者は送信者です。
+- `昨日スーパーで3200円` のように送ると、発言から下書きを作ります。
+- `やっぱ3000円` のように送ると、直近の下書きを修正します。送信者本人の下書きを優先します。
+- 確認カードの `登録` を押すか `登録` と送ると、`POST /api/expenses` を呼びます。許可されたチャットのメンバーなら誰でも承認できます。
+- 支出と関係のない発言、レシート以外の画像には、グループでは反応しません。
+
+読み取りには誤りが残るため、確認カードの金額は必ずレシートと見比べてください。下書きはメモリに保持するので、再起動すると消えます。
+
+AIが使えないときは、次の `支出登録` で手入力できます。`サマリー` や `履歴` などのコマンドはLLMを使いません。
+
+## Group chat
+
+1. LINE Developersで `Allow bot to join group chats` を有効にし、Botをグループへ招待します。
+2. グループで `グループID` と送り、返信された値を `LINE_ALLOWED_GROUP_IDS` に設定します。
+3. 各メンバーがグループで `ユーザーID` と送り、`LINE_MEMBER_MAP` に対応を設定します。
+
+許可したグループのメンバーは全員Botを使えます。`LINE_MEMBER_MAP` にない人が送った場合は、確認カードのボタンで支払者を選びます。
+
 ## Flow
 
 LINEで `支出登録` と送ると、次の順に質問します。
@@ -31,11 +53,20 @@ KAKEIBO_API_BASE_URL=http://app:3000
 LINE_CHANNEL_SECRET=your-line-channel-secret
 LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
 LINE_ALLOWED_USER_IDS=Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+LINE_ALLOWED_GROUP_IDS=Cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+LINE_MEMBER_MAP=Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:太郎,Uyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy:花子
 SESSION_TTL_MINUTES=15
+DRAFT_TTL_MINUTES=1440
+SAKURA_AI_TOKEN=your-sakura-ai-token
+SAKURA_AI_MODEL=preview/Qwen3-VL-30B-A3B-Instruct
 SUMMARY_SCHEDULE_CONFIG_PATH=
 ```
 
-`LINE_ALLOWED_USER_IDS` はカンマ区切りで複数指定できます。
+`LINE_ALLOWED_USER_IDS` と `LINE_ALLOWED_GROUP_IDS` はカンマ区切りで複数指定できます。
+
+`LINE_MEMBER_MAP` は `userId:メンバー名` のカンマ区切りです。メンバー名の代わりにメンバーIDも使えます。
+
+`SAKURA_AI_TOKEN` が空のときはAI登録が無効になり、`支出登録` の手入力だけが動きます。`SAKURA_AI_MODEL` は画像入力に対応したモデルを指定します。
 
 ## Development
 

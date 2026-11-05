@@ -60,9 +60,23 @@ export type Session = {
   updatedAt: number;
 };
 
+export type BotCardButton = {
+  label: string;
+  data: string;
+  primary?: boolean;
+};
+
+export type BotCard = {
+  title: string;
+  rows: Array<{ label: string; value: string }>;
+  warning?: string;
+  buttons: BotCardButton[];
+};
+
 export type BotReply = {
   text: string;
   quickReplies?: string[];
+  card?: BotCard;
 };
 
 export interface KakeiboClient {
@@ -76,5 +90,6 @@ export interface KakeiboClient {
     amountYen: number;
     categoryId: string;
     payerMemberId: string;
+    occurredAt?: string;
   }): Promise<unknown>;
 }

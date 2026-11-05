@@ -21,6 +21,21 @@ export class ExpenseConversation {
       return [{ text: "このLINEユーザーからの支出登録は許可されていません。" }];
     }
 
+    return this.handleAuthorizedText(userId, text);
+  }
+
+  /** 固定フローの入力中かどうか。入力中の発言はAIへ渡さない。 */
+  hasActiveSession(sessionKey: string): boolean {
+    return this.store.get(sessionKey) !== undefined;
+  }
+
+  /** LLMを通さずに処理するコマンドかどうか。 */
+  isCommand(text: string): boolean {
+    return isCancelCommand(text) || isSummaryCommand(text) || isRecentExpensesCommand(text) || isStartCommand(text);
+  }
+
+  /** 権限確認の済んだ発言を処理する。グループでは発言者ごとのキーを渡す。 */
+  async handleAuthorizedText(userId: string, text: string): Promise<BotReply[]> {
     if (isCancelCommand(text)) {
       this.store.delete(userId);
       return [{ text: "支出登録をキャンセルしました。" }];

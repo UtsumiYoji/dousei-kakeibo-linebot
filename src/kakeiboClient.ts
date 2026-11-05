@@ -29,6 +29,7 @@ export class HttpKakeiboClient implements KakeiboClient {
     amountYen: number;
     categoryId: string;
     payerMemberId: string;
+    occurredAt?: string;
   }): Promise<unknown> {
     return this.request("/api/expenses", {
       method: "POST",
